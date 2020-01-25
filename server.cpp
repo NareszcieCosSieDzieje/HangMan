@@ -73,8 +73,8 @@ int main(int argc, char* argv[]){
 
     //obsluguj deskryptory graczy
 
-
-  /*  struct epoll_event event, events[MAX_EVENTS];
+    /*
+    struct epoll_event event, events[MAX_EVENTS];
 
     event.events = EPOLLIN;
     event.data.fd = 0;
@@ -105,16 +105,12 @@ int main(int argc, char* argv[]){
         }
 
 
-        if(close(epoll_fd)) {
-            fprintf(stderr, "Failed to close epoll file descriptor\n");
-            return 1;
-        }
-            //FIXME: xd
- if (close(epoll_fd) < 0){
-     perror("Server epoll close error\n");
-     exit(EPOLL_CLOSE);
- }
-*/
+          //FIXME: xd
+    if (close(epoll_fd) < 0){
+        perror("Server epoll close error\n");
+        exit(EPOLL_CLOSE);
+    }
+    */
 
             //TODO: gdzieś indziej! ALE OGARNIJ CZEKANIE NA WĄTKI
     while (!threadVector[0].joinable()){
