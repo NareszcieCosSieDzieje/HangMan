@@ -55,7 +55,6 @@ std::string* loadUserData(char* filePath); //TODO: zwróć array stringów
 */
 
 
-
 //=======================================MAIN=============================================\\
 
 int main(int argc, char* argv[]){
@@ -63,11 +62,9 @@ int main(int argc, char* argv[]){
 
     //TODO: SERVER MUSI WCZYTAC LISTE LOGINOW I HASEL I SPRAWDZAC KTORE SA ZUZYTE
 
-
     signal(SIGINT, sigHandler);
 
     startServer();
-
 
     //obsluguj deskryptory graczy
 
@@ -132,10 +129,9 @@ int main(int argc, char* argv[]){
 }
 
 
-//=======================================FUNC DEC=========================================\\
+//=======================================FUNC-DEC=========================================\\
 
 void startServer(void){
-
     if( (serverFd = socket(AF_INET, SOCK_STREAM, 0)) < 0 ){
         perror("Failed to create socket.\n");
         exit(SOCKET_CREATE);
@@ -153,23 +149,19 @@ void startServer(void){
         perror("Failed to listen.\n");
         exit(SOCKET_LISTEN);
     }
-
     epollFd = epoll_create1(0);
     if (epollFd < 0){
         perror("Server epoll error!\n");
         exit(EPOLL_ERROR);
     }
-
     std::thread loopThread(listenLoop); //Uruchom wątek nasłuchujący nowych połączeń.
     threadVector.push_back(std::move(loopThread)); //Wątek nie może być skopiowany.
-
 }
 
 
 //TODO: czy wątek/funkcja ma cały czas w pętli nawalać accepty? czy lepsze rozwiązanie jest?
 void listenLoop(void){
     while(true){
-
         sockaddr_in clientAddr{};
         socklen_t cliLen = sizeof(clientAddr);
         int newClient = accept(serverFd, (struct sockaddr *)&clientAddr, &cliLen); //Nawiąż nowe połączenie z klientem.
@@ -177,9 +169,7 @@ void listenLoop(void){
             perror("ERROR on accept.\n");
             exit(SOCKET_ACCEPT);
         }
-
-    //Nowe połączenie przeslij do zweryfikowania
-    std::thread validationThread(clientValidation, newClient);
+    std::thread validationThread(clientValidation, newClient); //Nowe połączenie przeslij do zweryfikowania
     }
 }
 
@@ -214,7 +204,6 @@ void clientValidation(int newClientFd){
         printf("Log sie zgadza.\n");
         userExists = true;
     }
-
     if (userExists) {
         //TODO: odhacz zużyte haslo login? z jakiejs maoy hasel loginow na starcie wcztytanej
         Player newPlayer(login, pass);
@@ -227,7 +216,8 @@ void clientValidation(int newClientFd){
     } else {
         //TODO: WYSLIJ DANE ZE SIE NIE DA POŁĄCZYC JAKIES ZLE HASLO COS
         writeData(newClientFd, "AUTH-FAIL", sizeof("AUTH-FAIL"));
-        char msgBack[10];
+        char msgBack[9];
+        memset(msgBack, 0, sizeof(msgBack));
         auto r = readData(newClientFd, msgBack, sizeof(msgBack));
         if (strncmp(msgBack, "AUTH-ACK",  8) != 0){
             perror("Failed to get permission for disconnecting.\n");
@@ -236,10 +226,8 @@ void clientValidation(int newClientFd){
     }
 }
 
+//TODO: jakiś send że zrywamy połączenie?? to raczej w instacji danego problemu dac
 void stopConnection(int ClientFd){
-
-    //TODO: jakiś send że zrywamy połączenie??
-
     if (shutdown(ClientFd, SHUT_RDWR) < 0 ){
         perror("Failed to disconnect with the client.\n");
         //FIXME: exit?
@@ -260,10 +248,7 @@ void sessionLoop() { //TODO: jak to rozwiązać
     while(true){
 
         //conduct session
-
-
     }
-
 
 }
 
@@ -282,10 +267,8 @@ void writeData(int fd, char * buffer, ssize_t count){
 }
 
 
-
-
 /*
-void Server::joinAllThreads(){
+void joinAllThreads(){
     for (std::thread & th : sessionThreads)
     {
         // If thread Object is Joinable then Join that thread.

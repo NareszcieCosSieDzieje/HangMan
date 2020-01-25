@@ -58,19 +58,29 @@ int main(int argc, char* argv[]){
     // na razie wysylane to samo z kazdego klienta byle cos wyslac. Ustawiane w ------> startClient
     startClient();
 
-    startConnection();
+    bool connectionValidated = false;
+    while(!connectionValidated) {
 
-    char msg[100];
-    strcpy(msg, login);
-    strcpy(msg, "-");
-    strcat(msg, password);
+        startConnection();
+        //get nick i hasło
+        char msg[100];
+        strcpy(msg, login);
+        strcpy(msg, "-");
+        strcat(msg, password); //Konkatenacja log haslo
 
-    writeData(serverFd, msg, sizeof(msg));
-    memset(msg, 0, sizeof(msg));
-    auto x = readData(serverFd, msg, sizeof(msg) );
-    if (x != 3){
-        perror("Error loggin in.\n");
+        writeData(serverFd, msg, sizeof(msg)); //wyslij dane użytkownika
+        memset(msg, 0, sizeof(msg)); //odczytaj czy autoryzacja się powiodła
+        auto x = readData(serverFd, msg, sizeof(msg));
+        //Jeśli nie powiodła się autoryzacja spróbuj połączyć sie od nowa.
+        if (strncmp(msg, "AUTH-FAIL", 9) == 0) {
+            writeData(serverFd, "AUTH-ACK", sizeof("AUTH-ACK")); //Wyślij potwierdzenia że można zakończyć połączenie.
+        } else if (strncmp(msg, "AUTH-OK", 7) == 0) {
+            printf("SUCCESFUL LOGIN!\n");
+            connectionValidated = true;
+        }
     }
+
+
 
     //TODO: POŁĄCZ SIE Z DANĄ SESJA
 
