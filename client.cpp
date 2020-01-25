@@ -89,8 +89,6 @@ int main(int argc, char* argv[]){
         //wyslij ID SESJI do ktorej chcesz dołączyć
         //
         //czekaj na odpowiedz do ktorej sesji dołaczyłes, i czy, jesli sukces to break
-
-
         joinedSession = true;
     }
 

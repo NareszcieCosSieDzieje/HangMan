@@ -19,7 +19,10 @@ std::vector<std::thread> threadVector;
 std::vector<int> clientSockets;
 
 std::map<int, Player> clientMap;
-std::mutex mapMutex;
+std::mutex clientMapMutex;
+
+std::map<int, std::vector<Player>> playerSessions;
+//std::mutex playerSessionsMutex;
 
 int epollFd{};
 int serverFd{};
@@ -117,13 +120,6 @@ int main(int argc, char* argv[]){
     }
     threadVector[0].join();
 
-    /*
-    main:
-    launch thread pool
-    launch the listening thread
-    block until server is not neaded TODO: ???
-    */
-
 
     return 0;
 }
@@ -171,6 +167,7 @@ void listenLoop(void){
         }
     std::thread validationThread(clientValidation, newClient); //Nowe połączenie przeslij do zweryfikowania
     }
+    //TODO: jeśli jakis condition_variable to zakoncz prace?
 }
 
 
@@ -208,13 +205,15 @@ void clientValidation(int newClientFd){
         //TODO: odhacz zużyte haslo login? z jakiejs maoy hasel loginow na starcie wcztytanej
         Player newPlayer(login, pass);
         //Dodaj do mapy klientow -graczy
-        mapMutex.lock();
+        clientMapMutex.lock();
         clientMap.insert(std::pair<int, Player>(newClientFd, newPlayer));
-        mapMutex.unlock();
+        clientMapMutex.unlock();
         //Wyslij ack ze sie zalogował
         writeData(newClientFd, "AUTH-OK", sizeof("AUTH-OK"));
+
+        //TODO: OBSŁUŻ GO TERAZ?
+
     } else {
-        //TODO: WYSLIJ DANE ZE SIE NIE DA POŁĄCZYC JAKIES ZLE HASLO COS
         writeData(newClientFd, "AUTH-FAIL", sizeof("AUTH-FAIL"));
         char msgBack[9];
         memset(msgBack, 0, sizeof(msgBack));
@@ -225,6 +224,24 @@ void clientValidation(int newClientFd){
         stopConnection(newClientFd);
     }
 }
+
+
+void sendSessionData(int clientSocket){
+    std::string sessionData("");
+    for( auto const& [key, val] : playerSessions )
+    {
+        int sessionID = key;
+        sessionData.append(std::to_string(sessionID));
+        std::vector<Player> players = val;
+        for (auto & element : players) {
+            sessionData.append("-");
+            sessionData.append(element.getNick());
+        }
+        //CZY WYSYLAC POJEDYNCZE INFO O SESJI CZY WLASNIE NA KONCY FUNCJI CALOSC?
+    }
+    writeData(clientSocket, sessionData.c_str(), sessionData.length());
+}
+
 
 //TODO: jakiś send że zrywamy połączenie?? to raczej w instacji danego problemu dac
 void stopConnection(int ClientFd){
