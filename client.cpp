@@ -15,7 +15,6 @@
 
 int epollFd{};
 int clientFd{};
-int serverFd{};
 const unsigned int localPort{59998};
 const unsigned int remotePort{59999};
 sockaddr_in bindAddr {
@@ -68,22 +67,18 @@ int main(int argc, char* argv[]){
         strcpy(msg, "-");
         strcat(msg, password); //Konkatenacja log haslo
 
-        writeData(serverFd, msg, sizeof(msg)); //wyslij dane użytkownika
+        writeData(clientFd, msg, sizeof(msg)); //wyslij dane użytkownika
         memset(msg, 0, sizeof(msg)); //odczytaj czy autoryzacja się powiodła
-        auto x = readData(serverFd, msg, sizeof(msg));
+        auto x = readData(clientFd, msg, sizeof(msg));
         //Jeśli nie powiodła się autoryzacja spróbuj połączyć sie od nowa.
         if (strncmp(msg, "AUTH-FAIL", 9) == 0) {
-            writeData(serverFd, "AUTH-ACK", sizeof("AUTH-ACK")); //Wyślij potwierdzenia że można zakończyć połączenie.
+            writeData(clientFd, "AUTH-ACK", sizeof("AUTH-ACK")); //Wyślij potwierdzenia że można zakończyć połączenie.
         } else if (strncmp(msg, "AUTH-OK", 7) == 0) {
             printf("SUCCESFUL LOGIN!\n");
             connectionValidated = true;
         }
     }
-
-
-
     //TODO: POŁĄCZ SIE Z DANĄ SESJA
-
     bool joinedSession = false;
     while(!joinedSession){
         //TODO:
@@ -96,30 +91,19 @@ int main(int argc, char* argv[]){
         //czekaj na odpowiedz do ktorej sesji dołaczyłes, i czy, jesli sukces to break
 
 
-
         joinedSession = true;
     }
 
     //TODO:JAK OK TO WJEDZ W PETLE GRY
 
+    //TODO: EPOLL chyba wgl bez sensu w kliencie
     while(true){
-        epoll_event event{};
-        event.events = EPOLLIN;
-        int set = epoll_wait(epollFd, &event, 1, -1); // -1 == nieskończoność
-        if (set == -1){
-            perror("Epoll failed to wait.\n");
-            exit(EPOLL_WAIT); //TODO: dodaj obsluge zamkniecia
-        }
-        if( event.events & EPOLLIN && event.data.fd == clientFd ){
+
 
             //send jesli nie wyslal ile mial to od nopwa
             //read clientFd
             //write serverFd
-        }
-
-        if (0){
-          break;
-        }
+       break;
     }
 
     closeClient();
@@ -142,15 +126,6 @@ void startClient(void){
         perror("Failed to bind the socket.\n");
         exit(SOCKET_BIND);
     }
-    epollFd =  epoll_create1(0);
-    epoll_event event;
-    event.events = EPOLLIN; //TODO: CZY MA BYC IN??????
-    event.data.fd = clientFd; //TODO: CZY TAK MA BYĆ?
-    //FIXME: CZY TO POTRZEBNE DO KLIENTA WGL
-    if (epoll_ctl(epollFd, EPOLL_CTL_ADD, clientFd, &event) < 0) {
-        perror("Failed to add fd to epoll.\n");
-        exit(EPOLL_ADD);
-    }
     //TODO: ustaw login hasło, tj załaduj itp
     login = "test_user";
     password = "test_pass";
@@ -168,15 +143,30 @@ void startConnection(void){ //TODO: MOZE POLACZ ZE STARETEM ALE ZOBACZYMY
         perror("Resolving address failed!\n");
         exit(GETADDRINFO_ERROR);
     }
-    serverFd = connect(clientFd, resolved->ai_addr, resolved->ai_addrlen);
-    if (serverFd < 0){
+    if ( connect(clientFd, resolved->ai_addr, resolved->ai_addrlen) < 0){
         perror("Failed to connect.\n");
         exit(SOCKET_CONNECT);
     }
     freeaddrinfo(resolved);
-
 }
 
+
+void sigHandler(int signal){
+    closeClient();
+}
+
+
+ssize_t readData(int fd, char * buffer, ssize_t buffsize){
+    auto ret = read(fd, buffer, buffsize);
+    if(ret==-1) perror("read failed on descriptor %d\n");
+    return ret;
+}
+
+void writeData(int fd, char * buffer, ssize_t count){
+    auto ret = write(fd, buffer, count);
+    if(ret==-1) perror("write failed on descriptor %d\n");
+    if(ret!=count) perror("wrote less than requested to descriptor %d (%ld/%ld)\n");
+}
 
 /*
 int recv_all(int sockfd, void *buf, size_t len, int flags)
@@ -198,23 +188,3 @@ int recv_all(int sockfd, void *buf, size_t len, int flags)
 }
 
 */
-
-
-void sigHandler(int signal){
-    closeClient();
-}
-
-
-ssize_t readData(int fd, char * buffer, ssize_t buffsize){
-    auto ret = read(fd, buffer, buffsize);
-    if(ret==-1) perror("read failed on descriptor %d\n");
-    return ret;
-}
-
-void writeData(int fd, char * buffer, ssize_t count){
-    auto ret = write(fd, buffer, count);
-    if(ret==-1) perror("write failed on descriptor %d\n");
-    if(ret!=count) perror("wrote less than requested to descriptor %d (%ld/%ld)\n");
-}
-
-
