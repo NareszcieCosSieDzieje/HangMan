@@ -35,22 +35,14 @@ int playersPerSession = 4;
 
 //========================================FUNC PROTO========================================\\
 
-ssize_t readData(int fd, char * buffer, ssize_t buffsize){
-    auto ret = read(fd, buffer, buffsize);
-    if(ret==-1) perror("read failed on descriptor\n");
-    return ret;
-}
 
-void writeData(int fd, char * buffer, ssize_t count){
-    auto ret = write(fd, buffer, count);
-    if(ret==-1) perror("write failed on descriptor\n");
-    if(ret!=count) perror("wrote less than requested to descriptor\n"); //TODO: obsługiwać to? jakoś w pętli np tak dlugo jak roznica dowyslania-wyslane>0 to wysylaj roznice
-}
-
+ssize_t readData(int fd, char * buffer, ssize_t buffsize);
+void writeData(int fd, char * buffer, ssize_t count);
 void sigHandler(int signal);
 void startServer(void);
 void listenLoop(void);
 void sendAvailableSessions(void);
+void stopConnection(int ClientFd);
 void clientValidation(int newClientFd);
 std::string* loadUserData(char* filePath); //TODO: zwróć array stringów
 
@@ -193,7 +185,6 @@ void listenLoop(void){
 
 
 void clientValidation(int newClientFd){
-
     //TODO: sprawdz login haslo jesli rip to wywal, jak ok to dodaj, mozliwe jeszcze sprawdzanie portu ale jak jest haslo to raczej bez sensu?
     char msg[100];
     auto x = readData(newClientFd, msg, sizeof(msg) );
@@ -227,27 +218,22 @@ void clientValidation(int newClientFd){
     if (userExists) {
         //TODO: odhacz zużyte haslo login? z jakiejs maoy hasel loginow na starcie wcztytanej
         Player newPlayer(login, pass);
-
+        //Dodaj do mapy klientow -graczy
         mapMutex.lock();
         clientMap.insert(std::pair<int, Player>(newClientFd, newPlayer));
         mapMutex.unlock();
-
-       //FIXME: CZY JA TO JESZCZE POTRZEBUJE clientSockets.push_back(newClientFd);
+        //Wyslij ack ze sie zalogował
+        writeData(newClientFd, "AUTH-OK", sizeof("AUTH-OK"));
+    } else {
+        //TODO: WYSLIJ DANE ZE SIE NIE DA POŁĄCZYC JAKIES ZLE HASLO COS
+        writeData(newClientFd, "AUTH-FAIL", sizeof("AUTH-FAIL"));
+        char msgBack[10];
+        auto r = readData(newClientFd, msgBack, sizeof(msgBack));
+        if (strncmp(msgBack, "AUTH-ACK",  8) != 0){
+            perror("Failed to get permission for disconnecting.\n");
+        }
+        stopConnection(newClientFd);
     }
-    //else {close(newClientFd)}
-
-    //TODO: jakas hasmapa klient: sesja?
-    //TODO: OBSLUZ KLIENTA wyslij dane ze sie udalo zalogowac albo ze nie
-
-    //Dodaj co trzeba do sesji itp i zamknij się niech sesja i gra ogarnie resztę
-
-    // TODO: thisThread.close()
-
-    /*
-    *accept a client socket
-    *build a task out of the client socket
-    *push the task into the connection queue
-    */
 }
 
 void stopConnection(int ClientFd){
@@ -281,6 +267,19 @@ void sessionLoop() { //TODO: jak to rozwiązać
 
 }
 
+
+
+ssize_t readData(int fd, char * buffer, ssize_t buffsize){
+    auto ret = read(fd, buffer, buffsize);
+    if(ret==-1) perror("read failed on descriptor %d\n");
+    return ret;
+}
+
+void writeData(int fd, char * buffer, ssize_t count){
+    auto ret = write(fd, buffer, count);
+    if(ret==-1) perror("write failed on descriptor %d\n");
+    if(ret!=count) perror("wrote less than requested to descriptor %d (%ld/%ld)\n");
+}
 
 
 
