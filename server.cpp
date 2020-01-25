@@ -18,6 +18,7 @@
 std::vector<std::thread> threadVector;
 std::vector<int> clientSockets;
 
+
 std::map<int, Player> clientMap;
 std::mutex clientMapMutex;
 
@@ -47,6 +48,7 @@ void listenLoop(void);
 void sendAvailableSessions(void);
 void stopConnection(int ClientFd);
 void clientValidation(int newClientFd);
+void sendSessionData(int clientSocket);
 std::string* loadUserData(char* filePath); //TODO: zwróć array stringów
 
 
@@ -210,17 +212,17 @@ void clientValidation(int newClientFd){
         clientMapMutex.unlock();
         //Wyslij ack ze sie zalogował
         writeData(newClientFd, "AUTH-OK", sizeof("AUTH-OK"));
-
         //TODO: OBSŁUŻ GO TERAZ?
+        bool joinedSession = false;
+        while(!joinedSession){
+            sendSessionData(newClientFd)
+            //get chosen session
 
+            //sleep?
+
+        }
     } else {
         writeData(newClientFd, "AUTH-FAIL", sizeof("AUTH-FAIL"));
-        char msgBack[9];
-        memset(msgBack, 0, sizeof(msgBack));
-        auto r = readData(newClientFd, msgBack, sizeof(msgBack));
-        if (strncmp(msgBack, "AUTH-ACK",  8) != 0){
-            perror("Failed to get permission for disconnecting.\n");
-        }
         stopConnection(newClientFd);
     }
 }
@@ -228,18 +230,37 @@ void clientValidation(int newClientFd){
 
 void sendSessionData(int clientSocket){
     std::string sessionData("");
+    if (sessionData.size() > 0){
+        std::string sessionData(std::to_string(sessionData.size()));
+        sessionData.append(":");
+    }
     for( auto const& [key, val] : playerSessions )
     {
         int sessionID = key;
         sessionData.append(std::to_string(sessionID));
+        sessionData.append("-");
         std::vector<Player> players = val;
+        sessionData.append(std::to_string(players.size()));
         for (auto & element : players) {
-            sessionData.append("-");
+            sessionData.append(",");
             sessionData.append(element.getNick());
         }
+        sessionData.append(";");
         //CZY WYSYLAC POJEDYNCZE INFO O SESJI CZY WLASNIE NA KONCY FUNCJI CALOSC?
     }
-    writeData(clientSocket, sessionData.c_str(), sessionData.length());
+    std::vector<char> chars(sessionData.c_str(), sessionData.c_str() + sessionData.size() + 1u); //TODO zobacz czy dziala
+    writeData(clientSocket, &chars[0], sizeof(chars));
+    //i1d-nick1-nick2-nick3:id2-nick4-nick5-nick6
+    /* opcjonalnie zamiast wektora
+     * char *cstr = &str[0];
+     *
+     * std::string str = "string";
+        char *cstr = new char[str.length() + 1];
+        strcpy(cstr, str.c_str());
+        // do stuff
+        delete [] cstr;
+     *
+     * */
 }
 
 

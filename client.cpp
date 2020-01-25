@@ -8,8 +8,11 @@
 #include <cstring>
 #include <csignal>
 #include <string>
+#include <map>
+#include <vector>
 
 #include "statuses.hpp"
+#include "player.hpp"
 
 //=====================================GLOBALS============================================\\
 
@@ -30,6 +33,8 @@ addrinfo *resolved;
 
 char* login;
 char* password;
+
+int joinedSessionID{};
 //std::string login;
 //std::string password;
 
@@ -72,29 +77,64 @@ int main(int argc, char* argv[]){
         auto x = readData(clientFd, msg, sizeof(msg));
         //Jeśli nie powiodła się autoryzacja spróbuj połączyć sie od nowa.
         if (strncmp(msg, "AUTH-FAIL", 9) == 0) {
-            writeData(clientFd, "AUTH-ACK", sizeof("AUTH-ACK")); //Wyślij potwierdzenia że można zakończyć połączenie.
+            printf("Blad logowania sprobuj ponownie!\n");
         } else if (strncmp(msg, "AUTH-OK", 7) == 0) {
             printf("SUCCESFUL LOGIN!\n");
             connectionValidated = true;
         }
     }
     //TODO: POŁĄCZ SIE Z DANĄ SESJA
+    std::map<int, std::vector<std::string>> playerSessions;
+    std::vector<std::string> players;
+
     bool joinedSession = false;
     while(!joinedSession){
+
+        //TODO: w jakiej pętli ma działać poniższy kod i odczytywanie/wybór sesji
+
+        char msg[1024];
+        readData(clientFd, msg, sizeof(msg));
+        //sprawdz czy pusty??
+        if(msg[0] == '\0'){
+            printf("No sessions available.\n");
+        }
+        else {
+            printf("Sessions found.\n");
+            playerSessions.clear();
+            players.clear();
+            char* s;
+            s = strtok(msg,":"); // TODO: jak nie zadziała to daj ze delimiter ma wsystkie znaki
+            if (s == nullptr){ //TODO: czy to sprawdzać wogóle
+                //error;
+                printf("strtok error.\n");
+            }
+            long int numSessions = strtol(s, nullptr, 10);
+            for( int i =0; i < numSessions; i++ ) {
+                s = strtok(msg, "-");
+                long int sessionID = strtol(s, nullptr, 10);
+                s = strtok(msg, ",");
+                long int numPlayers = strtol(s, nullptr, 10);
+                for (int j = 0; j < numPlayers; j++) {
+                    s = strtok(msg, ",;");
+                    players.push_back(std::string(s));
+                }
+                playerSessions.insert(std::pair<int, std::vector<std::string>>(sessionID, players));
+            }
+        }
+
+
         //TODO:
-        //read dane sesji jakie sa dostepne
-        //DWIE OPCJE STWORZ I DOŁĄCZ
+        // DWIE OPCJE STWORZ I DOŁĄCZ
         // przetwórz i wyświetl dane sesji roznych one maja ID
-        //na podstawie tego co klikniesz daj znac ktora wybierasz
-        //wyslij ID SESJI do ktorej chcesz dołączyć
-        //
-        //czekaj na odpowiedz do ktorej sesji dołaczyłes, i czy, jesli sukces to break
+        // na podstawie tego co klikniesz daj znac ktora wybierasz
+        // wyslij ID SESJI do ktorej chcesz dołączyć
+        // czekaj na odpowiedz do ktorej sesji dołaczyłes, i czy, jesli sukces to break
+        joinedSessionID = 1;
         joinedSession = true;
     }
 
     //TODO:JAK OK TO WJEDZ W PETLE GRY
 
-    //TODO: EPOLL chyba wgl bez sensu w kliencie
     while(true){
 
 
