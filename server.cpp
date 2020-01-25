@@ -6,15 +6,20 @@
 #include <csignal>
 #include <sys/epoll.h>
 #include <cstring>
+#include <map>
+#include <mutex>
 
 #include "statuses.hpp"
+#include "player.hpp"
 
 
 //=====================================GLOBALS============================================\\
 
 std::vector<std::thread> threadVector;
 std::vector<int> clientSockets;
-//FIXME: std::map<int, Player> clientMap;
+
+std::map<int, Player> clientMap;
+std::mutex mapMutex;
 
 int epollFd{};
 int serverFd{};
@@ -181,9 +186,8 @@ void listenLoop(void){
             exit(SOCKET_ACCEPT);
         }
 
-    //FIXME: Czy wątek do tego? I jak go potem obsłużyć!
+    //Nowe połączenie przeslij do zweryfikowania
     std::thread validationThread(clientValidation, newClient);
-
     }
 }
 
@@ -191,7 +195,6 @@ void listenLoop(void){
 void clientValidation(int newClientFd){
 
     //TODO: sprawdz login haslo jesli rip to wywal, jak ok to dodaj, mozliwe jeszcze sprawdzanie portu ale jak jest haslo to raczej bez sensu?
-
     char msg[100];
     auto x = readData(newClientFd, msg, sizeof(msg) );
     //TODO: delete later
@@ -202,7 +205,6 @@ void clientValidation(int newClientFd){
     //    cout << msg[index];
     //}
     //char* userData = "test_user-test_pass";
-
     char * pch;
     pch = strtok(msg, "-");
     char* login;
@@ -215,24 +217,27 @@ void clientValidation(int newClientFd){
         pass = pch;
         printf("%c\n", pass);
     }
-
-    if (strcmp(login, "test_user") == 0){
-        printf("Log sie zgadza.\n");
-    }
-    if (strcmp(pass, "test_pass") == 0){
+    bool userExists = false;
+    if (  (strcmp(login, "test_user") == 0) && (strcmp(pass, "test_pass") == 0) ){
         printf("Pass sie zgadza.\n");
+        printf("Log sie zgadza.\n");
+        userExists = true;
     }
 
-    //if (userOK){
-    // Player p = new Player("login", "password");
-    // mymap.insert ( std::pair<int,Player>(newClient, p) );
+    if (userExists) {
+        //TODO: odhacz zużyte haslo login? z jakiejs maoy hasel loginow na starcie wcztytanej
+        Player newPlayer(login, pass);
+
+        mapMutex.lock();
+        clientMap.insert(std::pair<int, Player>(newClientFd, newPlayer));
+        mapMutex.unlock();
+
+       //FIXME: CZY JA TO JESZCZE POTRZEBUJE clientSockets.push_back(newClientFd);
+    }
     //else {close(newClientFd)}
 
-    //TODO: mutex na tym??!!
-    clientSockets.push_back(newClientFd);
-
     //TODO: jakas hasmapa klient: sesja?
-    //TODO: OBSLUZ KLIENTA
+    //TODO: OBSLUZ KLIENTA wyslij dane ze sie udalo zalogowac albo ze nie
 
     //Dodaj co trzeba do sesji itp i zamknij się niech sesja i gra ogarnie resztę
 

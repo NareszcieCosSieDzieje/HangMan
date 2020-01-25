@@ -2,21 +2,25 @@
 #ifndef WISIELEC_PLAYER_HPP
 #define WISIELEC_PLAYER_HPP
 
-#include "account.hpp"
+#include "string"
 
 class Player {
 private:
-    std::string nick;
-    std::string password;
+    char* nick;
+    char* password;
 
 public:
-    const std::string &getNick() const;
+    Player();
+    Player(char* nick, char* password);
+    //~Player();
 
-    void setNick(const std::string &nick);
+    char *getNick() const;
 
-    const std::string &getPassword() const;
+    void setNick(char *nick);
 
-    void setPassword(const std::string &password);
+    char *getPassword() const;
+
+    void setPassword(char *password);
 
 };
 

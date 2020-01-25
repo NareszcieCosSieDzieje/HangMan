@@ -3,4 +3,4 @@ project(Sieci_Wisielec)
 
 set(CMAKE_CXX_STANDARD 14)
 
-add_executable(Sieci_Wisielec main.cpp client.cpp server.cpp account.cpp account.hpp player.cpp player.hpp session.cpp session.hpp statuses.hpp)
+add_executable(Sieci_Wisielec main.cpp client.cpp server.cpp player.cpp player.hpp session.cpp session.hpp statuses.hpp)
