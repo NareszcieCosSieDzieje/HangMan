@@ -31,7 +31,7 @@ const unsigned int localPort{8889};
 sockaddr_in bindAddr {
         .sin_family = AF_INET,
         .sin_port = htons(localPort),
-        .sin_addr = htonl(INADDR_ANY)
+        .sin_addr = htonl(INADDR_ANY) //TODO: ZMIEN NA ADRESOKRESLONY
 };
 
 int maxSessions = 2; //TODO: ile sesji?
