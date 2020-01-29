@@ -77,6 +77,13 @@ int main(int argc, char* argv[]){
 
     startServer();
 
+    std::cout<< "MAIN PRZED LOOP" << std::endl;
+    while(true){
+
+    }
+    std::cout<< "MAIN PO LOOP" << std::endl;
+
+
     //obsluguj deskryptory graczy
 
     /*
@@ -173,6 +180,7 @@ void listenLoop(void){
             exit(SOCKET_ACCEPT);
         }
         std::thread validationThread(clientValidation, newClient); //Nowe połączenie przeslij do zweryfikowania
+        validationThread.detach();
     }
     //TODO: jeśli jakis condition_variable to zakoncz prace?
 }
@@ -227,13 +235,13 @@ void clientValidation(int newClientFd){
             //get chosen session
 
             //sleep?
-
         }
     } else {
         writeData(newClientFd, "AUTH-FAIL", sizeof("AUTH-FAIL"));
         //sleep(0.2)
         stopConnection(newClientFd);
     }
+
 }
 
 //MUTEX?

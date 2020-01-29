@@ -72,8 +72,10 @@ int main(int argc, char* argv[]){
 
         petla++;
         //sleep(1);
-        std::cout << "Connection no: " << petla << std::endl;
-        startConnection();
+        if (petla < 2) {
+            std::cout << "Connection no: " << petla << std::endl;
+            startConnection();
+        }
         //get nick i hasło
         char msg[100];
         strcpy(msg, login);
@@ -92,7 +94,6 @@ int main(int argc, char* argv[]){
             printf("SUCCESFUL LOGIN!\n");
             connectionValidated = true;
         }
-        sleep(60);
     }
     //TODO: POŁĄCZ SIE Z DANĄ SESJA
     std::map<int, std::vector<std::string>> playerSessions;
