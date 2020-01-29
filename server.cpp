@@ -8,6 +8,8 @@
 #include <cstring>
 #include <map>
 #include <mutex>
+#include <errno.h>
+#include <iostream>
 
 #include "statuses.hpp"
 #include "player.hpp"
@@ -28,7 +30,7 @@ std::map<int, std::vector<Player>> playerSessions;
 
 int epollFd{};
 int serverFd{};
-const unsigned int localPort{8889};
+const unsigned int localPort{55555};
 sockaddr_in bindAddr {
         .sin_family = AF_INET,
         .sin_port = htons(localPort),
@@ -69,6 +71,7 @@ int main(int argc, char* argv[]){
     //TODO: SERVER MUSI WCZYTAC LISTE LOGINOW I HASEL I SPRAWDZAC KTORE SA ZUZYTE
 
     signal(SIGINT, sigHandler);
+    signal(SIGTSTP, sigHandler);
 
     bindAddr.sin_addr.s_addr = htonl(INADDR_ANY); //TODO: ZMIEN NA ADRESOKRESLONY
 
@@ -176,6 +179,9 @@ void listenLoop(void){
 
 
 void clientValidation(int newClientFd){
+
+    //int newClientFd = 1;
+    std::cout << "WERYFIKACJA KLIENTA\n" << std::endl;
     //TODO: sprawdz login haslo jesli rip to wywal, jak ok to dodaj, mozliwe jeszcze sprawdzanie portu ale jak jest haslo to raczej bez sensu?
     char msg[100];
     auto x = readData(newClientFd, msg, sizeof(msg) );
@@ -297,12 +303,18 @@ void sessionLoop() { //TODO: jak to rozwiązać
 
 ssize_t readData(int fd, char * buffer, ssize_t buffsize){
     auto ret = read(fd, buffer, buffsize);
-    if(ret==-1) perror("read failed on descriptor %d\n");
+    std::cout << "Read ret: " << ret << std::endl;
+    if(ret==-1) {
+       // printf("Oh dear, something went wrong with read()! %s\n", strerror(errno));
+        perror("read failed on descriptor %d\n");
+    }
+    //perror("read failed on descriptor %d\n");
     return ret;
 }
 
 void writeData(int fd, char * buffer, ssize_t count){
     auto ret = write(fd, buffer, count);
+    std::cout << "Read ret: " << ret << std::endl;
     if(ret==-1) perror("write failed on descriptor %d\n");
     if(ret!=count) perror("wrote less than requested to descriptor %d (%ld/%ld)\n");
 }

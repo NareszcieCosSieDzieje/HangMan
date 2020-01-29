@@ -10,6 +10,8 @@
 #include <string>
 #include <map>
 #include <vector>
+#include <errno.h>
+#include <iostream>
 
 #include "statuses.hpp"
 #include "player.hpp"
@@ -18,7 +20,7 @@
 
 int clientFd{};
 const unsigned int localPort{59998};
-const unsigned int remotePort{59999};
+const unsigned int remotePort{55555};
 sockaddr_in bindAddr {
         .sin_family = AF_INET,
         .sin_port = htons(localPort)
@@ -64,34 +66,42 @@ int main(int argc, char* argv[]){
 
     startClient();
 
+    int petla = 0;
     bool connectionValidated = false;
     while(!connectionValidated) {
 
+        petla++;
+        //sleep(1);
+        std::cout << "Connection no: " << petla << std::endl;
         startConnection();
         //get nick i hasło
         char msg[100];
         strcpy(msg, login);
         strcpy(msg, "-");
         strcat(msg, password); //Konkatenacja log haslo
-
+        std::cout << "Write no: " << petla << std::endl;
         writeData(clientFd, msg, sizeof(msg)); //wyslij dane użytkownika
         memset(msg, 0, sizeof(msg)); //odczytaj czy autoryzacja się powiodła
+        std::cout << "Read no: " << petla << std::endl;
         auto x = readData(clientFd, msg, sizeof(msg));
         //Jeśli nie powiodła się autoryzacja spróbuj połączyć sie od nowa.
         if (strncmp(msg, "AUTH-FAIL", 9) == 0) {
-            //sleep(0.5);
+            sleep(0.5);
             printf("Blad logowania sprobuj ponownie!\n");
         } else if (strncmp(msg, "AUTH-OK", 7) == 0) {
             printf("SUCCESFUL LOGIN!\n");
             connectionValidated = true;
         }
+        sleep(60);
     }
     //TODO: POŁĄCZ SIE Z DANĄ SESJA
     std::map<int, std::vector<std::string>> playerSessions;
     std::vector<std::string> players;
 
+
     bool joinedSession = false;
     while(!joinedSession){
+
 
         //TODO: w jakiej pętli ma działać poniższy kod i odczytywanie/wybór sesji
 
@@ -179,7 +189,7 @@ void closeClient(void){
 
 
 void startConnection(void){ //TODO: MOZE POLACZ ZE STARETEM ALE ZOBACZYMY
-    int err = getaddrinfo("127.0.0.1", "59999", &hints, &resolved);
+    int err = getaddrinfo("127.0.0.1", "55555", &hints, &resolved);
     if (err || !resolved){
         perror("Resolving address failed!\n");
         exit(GETADDRINFO_ERROR);
@@ -200,12 +210,17 @@ void sigHandler(int signal){
 
 ssize_t readData(int fd, char * buffer, ssize_t buffsize){
     auto ret = read(fd, buffer, buffsize);
-    if(ret==-1) perror("read failed on descriptor %d\n");
+    std::cout << "Read ret: " << ret << std::endl;
+    if(ret==-1) {
+        // printf("Oh dear, something went wrong with read()! %s\n", strerror(errno));
+        perror("read failed on descriptor %d\n");
+    }
     return ret;
 }
 
 void writeData(int fd, char * buffer, ssize_t count){
     auto ret = write(fd, buffer, count);
+    std::cout << "Write ret: " << ret << std::endl;
     if(ret==-1) perror("write failed on descriptor %d\n");
     if(ret!=count) perror("wrote less than requested to descriptor %d (%ld/%ld)\n");
 }
