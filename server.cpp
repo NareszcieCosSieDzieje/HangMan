@@ -211,7 +211,8 @@ void clientValidation(int newClientFd){
         //TODO: OBSŁUŻ GO TERAZ?
         bool joinedSession = false;
         while(!joinedSession){
-            sendSessionData(newClientFd)
+
+            sendSessionData(newClientFd);
             //get chosen session
 
             //sleep?
@@ -219,14 +220,15 @@ void clientValidation(int newClientFd){
         }
     } else {
         writeData(newClientFd, "AUTH-FAIL", sizeof("AUTH-FAIL"));
+        //sleep(0.2)
         stopConnection(newClientFd);
     }
 }
 
-
+//MUTEX?
 void sendSessionData(int clientSocket){
     std::string sessionData("");
-    if (sessionData.size() > 0){
+    if (playerSessions.size() > 0){
         std::string sessionData(std::to_string(sessionData.size()));
         sessionData.append(":");
     }

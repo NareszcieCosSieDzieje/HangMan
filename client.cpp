@@ -16,7 +16,6 @@
 
 //=====================================GLOBALS============================================\\
 
-int epollFd{};
 int clientFd{};
 const unsigned int localPort{59998};
 const unsigned int remotePort{59999};
@@ -77,6 +76,7 @@ int main(int argc, char* argv[]){
         auto x = readData(clientFd, msg, sizeof(msg));
         //Jeśli nie powiodła się autoryzacja spróbuj połączyć sie od nowa.
         if (strncmp(msg, "AUTH-FAIL", 9) == 0) {
+            //sleep(0.5);
             printf("Blad logowania sprobuj ponownie!\n");
         } else if (strncmp(msg, "AUTH-OK", 7) == 0) {
             printf("SUCCESFUL LOGIN!\n");
