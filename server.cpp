@@ -11,6 +11,7 @@
 
 #include "statuses.hpp"
 #include "player.hpp"
+#include "player.cpp"
 
 
 //=====================================GLOBALS============================================\\
@@ -31,7 +32,7 @@ const unsigned int localPort{8889};
 sockaddr_in bindAddr {
         .sin_family = AF_INET,
         .sin_port = htons(localPort),
-        .sin_addr = htonl(INADDR_ANY)
+        //.sin_addr = htonl(INADDR_ANY)
 };
 
 int maxSessions = 2; //TODO: ile sesji?
@@ -68,6 +69,8 @@ int main(int argc, char* argv[]){
     //TODO: SERVER MUSI WCZYTAC LISTE LOGINOW I HASEL I SPRAWDZAC KTORE SA ZUZYTE
 
     signal(SIGINT, sigHandler);
+
+    bindAddr.sin_addr.s_addr = htonl(INADDR_ANY); //TODO: ZMIEN NA ADRESOKRESLONY
 
     startServer();
 
@@ -143,6 +146,7 @@ void startServer(void){
         perror("Failed to listen.\n");
         exit(SOCKET_LISTEN);
     }
+    printf("1\n");
     epollFd = epoll_create1(0);
     if (epollFd < 0){
         perror("Server epoll error!\n");
@@ -158,12 +162,14 @@ void listenLoop(void){
     while(true){
         sockaddr_in clientAddr{};
         socklen_t cliLen = sizeof(clientAddr);
+        printf("przed\n");
         int newClient = accept(serverFd, (struct sockaddr *)&clientAddr, &cliLen); //Nawiąż nowe połączenie z klientem.
+        printf("po\n");
         if (newClient < 0) {
             perror("ERROR on accept.\n");
             exit(SOCKET_ACCEPT);
         }
-    std::thread validationThread(clientValidation, newClient); //Nowe połączenie przeslij do zweryfikowania
+        std::thread validationThread(clientValidation, newClient); //Nowe połączenie przeslij do zweryfikowania
     }
     //TODO: jeśli jakis condition_variable to zakoncz prace?
 }
@@ -187,11 +193,11 @@ void clientValidation(int newClientFd){
     char* pass;
     if(pch != NULL ){
         login = pch;
-        printf("%c\n", login);
+        printf("%s\n", login);
     }
     if(pch != NULL ){
         pass = pch;
-        printf("%c\n", pass);
+        printf("%s\n", pass);
     }
     bool userExists = false;
     if (  (strcmp(login, "test_user") == 0) && (strcmp(pass, "test_pass") == 0) ){
@@ -211,7 +217,6 @@ void clientValidation(int newClientFd){
         //TODO: OBSŁUŻ GO TERAZ?
         bool joinedSession = false;
         while(!joinedSession){
-
             sendSessionData(newClientFd);
             //get chosen session
 

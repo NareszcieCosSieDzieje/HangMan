@@ -21,8 +21,8 @@ const unsigned int localPort{59998};
 const unsigned int remotePort{59999};
 sockaddr_in bindAddr {
         .sin_family = AF_INET,
-        .sin_port = htons(localPort),
-        .sin_addr = htonl(INADDR_ANY)};
+        .sin_port = htons(localPort)
+};
 addrinfo hints {
         .ai_flags= 0,
         .ai_family = AF_INET,
@@ -59,6 +59,9 @@ int main(int argc, char* argv[]){
 
     //TODO: Dorobic wysylanie HASLA i LOGINU, ładowanie z plku, jesli nie ma trzeba podać zarejestrować się?
     // na razie wysylane to samo z kazdego klienta byle cos wyslac. Ustawiane w ------> startClient
+
+    bindAddr.sin_addr.s_addr = htonl(INADDR_ANY);
+
     startClient();
 
     bool connectionValidated = false;
@@ -182,6 +185,7 @@ void startConnection(void){ //TODO: MOZE POLACZ ZE STARETEM ALE ZOBACZYMY
         exit(GETADDRINFO_ERROR);
     }
     if ( connect(clientFd, resolved->ai_addr, resolved->ai_addrlen) < 0){
+        printf("TU\n");
         perror("Failed to connect.\n");
         exit(SOCKET_CONNECT);
     }
