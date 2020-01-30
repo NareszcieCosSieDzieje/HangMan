@@ -58,7 +58,8 @@ void sigHandler(int signal);
 int main(int argc, char* argv[]){
 
     signal(SIGINT, sigHandler);
-
+    signal(SIGTSTP, sigHandler);
+                                                                                                                                                                                
     //TODO: Dorobic wysylanie HASLA i LOGINU, ładowanie z plku, jesli nie ma trzeba podać zarejestrować się?
     // na razie wysylane to samo z kazdego klienta byle cos wyslac. Ustawiane w ------> startClient
 
@@ -79,7 +80,7 @@ int main(int argc, char* argv[]){
         //get nick i hasło
         char msg[100];
         strcpy(msg, login);
-        strcpy(msg, "-");
+        strcat(msg, "-");
         strcat(msg, password); //Konkatenacja log haslo
         std::cout << "Write no: " << petla << std::endl;
         writeData(clientFd, msg, sizeof(msg)); //wyslij dane użytkownika

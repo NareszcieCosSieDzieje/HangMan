@@ -14,6 +14,7 @@
 #include "statuses.hpp"
 #include "player.hpp"
 #include "player.cpp"
+#include "user_loader.hpp"
 
 
 //=====================================GLOBALS============================================\\
@@ -188,15 +189,16 @@ void listenLoop(void){
 
 void clientValidation(int newClientFd){
 
-    //int newClientFd = 1;
+
     std::cout << "WERYFIKACJA KLIENTA\n" << std::endl;
     //TODO: sprawdz login haslo jesli rip to wywal, jak ok to dodaj, mozliwe jeszcze sprawdzanie portu ale jak jest haslo to raczej bez sensu?
     char msg[100];
     auto x = readData(newClientFd, msg, sizeof(msg) );
     //TODO: delete later
-    if(x != 19){
+    if(x != 100){
         perror("User data sending error.\n");
     }
+    //for (int index = 0; msg[index] != '/0'; index++) {
     //for (int index = 0; msg[index] != '/0'; index++) {
     //    cout << msg[index];
     //}
@@ -208,17 +210,24 @@ void clientValidation(int newClientFd){
     if(pch != NULL ){
         login = pch;
         printf("%s\n", login);
+        pch = strtok(NULL, "-");
     }
     if(pch != NULL ){
         pass = pch;
         printf("%s\n", pass);
     }
     bool userExists = false;
-    if (  (strcmp(login, "test_user") == 0) && (strcmp(pass, "test_pass") == 0) ){
+    std::string loginS(login);
+    std::string passwordS(pass);
+    userExists = searchForUserData(loginS, passwordS);
+
+    /* bool userExists = false;
+     * if (  (strcmp(login, "test_user") == 0) && (strcmp(pass, "test_pass") == 0) ){
         printf("Pass sie zgadza.\n");
         printf("Log sie zgadza.\n");
         userExists = true;
     }
+    */
     if (userExists) {
         //TODO: odhacz zużyte haslo login? z jakiejs maoy hasel loginow na starcie wcztytanej
         Player newPlayer(login, pass);
