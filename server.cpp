@@ -220,6 +220,7 @@ void clientValidation(int newClientFd){
     std::string loginS(login);
     std::string passwordS(pass);
     userExists = searchForUserData(loginS, passwordS);
+    std::cout<<userExists<<std::endl;
 
     /* bool userExists = false;
      * if (  (strcmp(login, "test_user") == 0) && (strcmp(pass, "test_pass") == 0) ){
