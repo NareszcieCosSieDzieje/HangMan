@@ -70,50 +70,66 @@ int main(int argc, char* argv[]){
     startClient();
 
     //TODO: OBSLUZ BUTTONY! i reset wybierania register or login jak nie wyjdzie
-    enum conType{
-        signin = 1,
-        singup = 2//tworzenie konta
-    } typeOfConnection;
-    // TODO: GUI!!!!!!!!1
-    //  while(register or signup not clicked){
-    //      wait;
-    //  }
-    //  typeOfConnection = daj wartość
-    //TODO: ustaw login hasło, tj załaduj itp
 
-    login = "test_user"; // TO TEZ ZALADUJ
-    password = "test_pass";
 
+    unsigned int connectionType = 0;
+    const unsigned int signin = 1;
+    const unsigned int signup = 2;
 
     int petla = 0;
     bool connectionValidated = false;
     while(!connectionValidated) {
 
         petla++;
-        //if (petla < 2) {
-        //   std::cout << "Connection no: " << petla << std::endl;
-        startConnection();
-        // }
-        //get nick i hasło
+        std::cout << "Connection number: " << petla << std::endl;
 
-        char msg[100];
-        strcpy(msg, login);
-        strcat(msg, "-");
-        strcat(msg, password); //Konkatenacja log haslo
-        std::cout << "Write no: " << petla << std::endl;
-        writeData(clientFd, msg, sizeof(msg)); //wyslij dane użytkownika
-        memset(msg, 0, sizeof(msg)); //odczytaj czy autoryzacja się powiodła
-        std::cout << "Read no: " << petla << std::endl;
-        auto x = readData(clientFd, msg, sizeof(msg));
-        //Jeśli nie powiodła się autoryzacja spróbuj połączyć sie od nowa.
-        if (strncmp(msg, "AUTH-FAIL", 9) == 0) {
-            std::this_thread::sleep_for(std::chrono::milliseconds(500));
-            printf("Blad logowania sprobuj ponownie!\n");
-        } else if (strncmp(msg, "AUTH-OK", 7) == 0) {
-            printf("SUCCESFUL LOGIN!\n");
-            connectionValidated = true;
+        // setLogin setPassword set type of Connection
+        // TODO: GUI!!!!!!!!1
+        //  while(register or signup not clicked){
+        //      wait;
+        //  }
+        //  typeOfConnection = daj wartość signin albo signup
+        //TODO: ustaw login hasło, tj załaduj itp
+        // MA BYC DODANE SPRAWDZANIE ZNAKOW W LOGINIE I HASLE I ZEBY BYLY CALOSCIOWO DO 100 ZNAKOW
+
+        login = "test_user";
+        password = "test_pass";
+
+        startConnection();
+
+        char buffer [1];
+        int ret = snprintf(buffer, sizeof(buffer), "%d", connectionType);
+        char * num_string = buffer;
+        writeData(clientFd, num_string, sizeof(num_string)); //wysyła czy rejestracja czy co login
+
+        //TODO: //wyslij wiadomosc czy rejestracja czy login
+        if (connectionType == signup){
+
+
+
+        } else if (connectionType == signin){
+            char msg[100];
+            memset(msg, 0, sizeof(msg));
+            strcpy(msg, login);
+            strcat(msg, "-");
+            strcat(msg, password); //Konkatenacja log haslo
+            std::cout << "Write no: " << petla << std::endl;
+            writeData(clientFd, msg, sizeof(msg)); //wyslij dane użytkownika
+            memset(msg, 0, sizeof(msg)); //odczytaj czy autoryzacja się powiodła
+            std::cout << "Read no: " << petla << std::endl;
+            auto x = readData(clientFd, msg, sizeof(msg));
+            //Jeśli nie powiodła się autoryzacja spróbuj połączyć sie od nowa.
+            if (strncmp(msg, "AUTH-FAIL", 9) == 0) {
+                std::this_thread::sleep_for(std::chrono::milliseconds(500));
+                printf("Blad logowania sprobuj ponownie!\n");
+            } else if (strncmp(msg, "AUTH-OK", 7) == 0) {
+                printf("SUCCESFUL LOGIN!\n");
+                connectionValidated = true;
+            }
         }
+
     }
+
     //TODO: POŁĄCZ SIE Z DANĄ SESJA
     std::map<int, std::vector<std::string>> playerSessions;
     std::vector<std::string> players;

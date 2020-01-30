@@ -192,17 +192,21 @@ void clientValidation(int newClientFd){
 
     std::cout << "WERYFIKACJA KLIENTA\n" << std::endl;
     //TODO: sprawdz login haslo jesli rip to wywal, jak ok to dodaj, mozliwe jeszcze sprawdzanie portu ale jak jest haslo to raczej bez sensu?
-    char msg[100];
-    auto x = readData(newClientFd, msg, sizeof(msg) );
-    //TODO: delete later
-    if(x != 100){
-        perror("User data sending error.\n");
+
+    const unsigned int signin = 1;
+    const unsigned int signup = 2;
+
+    char conType[1];
+    auto xRead = readData(newClientFd, conType, sizeof(conType));
+    if(xRead != 1){
+        perror("User data sending error 1.\n");
     }
-    //for (int index = 0; msg[index] != '/0'; index++) {
-    //for (int index = 0; msg[index] != '/0'; index++) {
-    //    cout << msg[index];
-    //}
-    //char* userData = "test_user-test_pass";
+    int cT = (int) conType[0];
+    char msg[100];
+    xRead = readData(newClientFd, msg, sizeof(msg) );
+    if(xRead != 100){
+        perror("User data sending error 2.\n");
+    }
     char * pch;
     pch = strtok(msg, "-");
     char* login;
@@ -219,17 +223,14 @@ void clientValidation(int newClientFd){
     bool userExists = false;
     std::string loginS(login);
     std::string passwordS(pass);
-    userExists = searchForUserData(loginS, passwordS); //WYWOŁANIE FUNKCJI CZYTAJĄCEJ Z PLIKU
-    std::cout<<userExists<<std::endl;
 
-    /* bool userExists = false;
-     * if (  (strcmp(login, "test_user") == 0) && (strcmp(pass, "test_pass") == 0) ){
-        printf("Pass sie zgadza.\n");
-        printf("Log sie zgadza.\n");
+    if(cT == signup){
+        // TODO: dodaj funckje w user_loader.hpp addUser(std::string user) !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         userExists = true;
+    } else if (cT == signin){
+        userExists = searchForUserData(loginS, passwordS); //WYWOŁANIE FUNKCJI CZYTAJĄCEJ Z PLIKU
+        std::cout<<userExists<<std::endl;
     }
-    */
-
     if (userExists) {
         Player newPlayer(login, pass);
         //Dodaj do mapy klientow -graczy
