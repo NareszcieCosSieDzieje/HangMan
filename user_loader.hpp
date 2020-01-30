@@ -27,10 +27,13 @@ bool searchForUserData(std::string login, std::string password) {
 // wczytaj po loginie i hasle, jesli istnieja to przechowaj w pamieci jesli znajdz to koniec
 //czy mozna dodawac nowych uzytkownikow nie [rzez serwer???
 
+    std::cout << "searchForData: "<< std::endl;
+    std::cout << "Login: " << login << std::endl;
+    std::cout << "Haslo: " << password << std::endl;
+
     std::ifstream userFile;
     userFile.open ("user_data.txt", std::ios::in);
     if (userFile.is_open()) {
-
         //TODO: if empty error??
         std::string line;
         while (std::getline(userFile, line)) {
@@ -50,15 +53,10 @@ bool searchForUserData(std::string login, std::string password) {
                     stringStream.unget();
                 }
                 if (i%2 == 0) {
-                    std::cout << "iteracja: " << i << std::endl;
-                    std::cout << "Login: " << login << std::endl;
-                    std::cout << "Login word: " << word << std::endl;
                     if (login == word){
                         found++;
                     }
                 } else {
-                    std::cout << "Password: " << password << std::endl;
-                    std::cout << "Password word: " << word << std::endl;
                     if(password == word){
                         found++;
                     }
@@ -85,6 +83,21 @@ bool searchForUserData(std::string login, std::string password) {
     return false;
 }
 
+
+void addUser(std::string user, std::string password){
+    std::fstream userFile;
+    userFile.open("user_data.txt",  std::fstream::in | std::fstream::out | std::fstream::ate ); // append instead of overwrite
+    if (userFile.is_open()){
+        long pos = userFile.tellp();
+        std::cout<< ">_________________________________pos: " << pos << std::endl;
+        userFile.seekp(pos-1);
+        userFile << ",{" + user + ":" + password + "};";
+        userFile.close();
+        std::cout<<"Successfully appended file!" <<std::endl;
+    } else {
+        std::cout<<"Couldn't open file!" <<std::endl;
+    }
+}
 
 
 

@@ -61,9 +61,6 @@ int main(int argc, char* argv[]){
 
     signal(SIGINT, sigHandler);
     signal(SIGTSTP, sigHandler);
-                                                                                                                                                                                
-    //TODO: Dorobic wysylanie HASLA i LOGINU, ładowanie z plku, jesli nie ma trzeba podać zarejestrować się?
-    // na razie wysylane to samo z kazdego klienta byle cos wyslac. Ustawiane w ------> startClient
 
     bindAddr.sin_addr.s_addr = htonl(INADDR_ANY);
 
@@ -94,41 +91,44 @@ int main(int argc, char* argv[]){
 
         login = "test_user";
         password = "test_pass";
+        connectionType = 2; //TODO: zmien to na wybor
 
         startConnection();
 
-        char buffer [1];
+        char buffer [10];
         int ret = snprintf(buffer, sizeof(buffer), "%d", connectionType);
         char * num_string = buffer;
+        std::cout <<"num string: "<< num_string << std::endl;
         writeData(clientFd, num_string, sizeof(num_string)); //wysyła czy rejestracja czy co login
 
-        //TODO: //wyslij wiadomosc czy rejestracja czy login
-        if (connectionType == signup){
-
-
-
-        } else if (connectionType == signin){
-            char msg[100];
-            memset(msg, 0, sizeof(msg));
-            strcpy(msg, login);
-            strcat(msg, "-");
-            strcat(msg, password); //Konkatenacja log haslo
-            std::cout << "Write no: " << petla << std::endl;
-            writeData(clientFd, msg, sizeof(msg)); //wyslij dane użytkownika
-            memset(msg, 0, sizeof(msg)); //odczytaj czy autoryzacja się powiodła
-            std::cout << "Read no: " << petla << std::endl;
-            auto x = readData(clientFd, msg, sizeof(msg));
-            //Jeśli nie powiodła się autoryzacja spróbuj połączyć sie od nowa.
-            if (strncmp(msg, "AUTH-FAIL", 9) == 0) {
-                std::this_thread::sleep_for(std::chrono::milliseconds(500));
+        char msg[100];
+        memset(msg, 0, sizeof(msg));
+        strcpy(msg, login);
+        strcat(msg, "-");
+        strcat(msg, password); //Konkatenacja log haslo
+        std::cout << "Write no: " << petla << std::endl;
+        writeData(clientFd, msg, sizeof(msg)); //wyslij dane użytkownika
+        memset(msg, 0, sizeof(msg)); //odczytaj czy autoryzacja się powiodła
+        std::cout << "Read no: " << petla << std::endl;
+        auto x = readData(clientFd, msg, sizeof(msg));
+        //Jeśli nie powiodła się autoryzacja spróbuj połączyć sie od nowa.
+        if (strncmp(msg, "AUTH-FAIL", 9) == 0) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(500));
+            if (connectionType == signin){
                 printf("Blad logowania sprobuj ponownie!\n");
-            } else if (strncmp(msg, "AUTH-OK", 7) == 0) {
-                printf("SUCCESFUL LOGIN!\n");
-                connectionValidated = true;
+            } else if (connectionType == signup){
+                printf("Blad rejestracji sprobuj ponownie!\n");
             }
+        } else if (strncmp(msg, "AUTH-OK", 7) == 0) {
+            if (connectionType == signin){
+                printf("LOGIN SUKCES!\n");
+            } else if (connectionType == signup){
+                printf("REJESTRACJA SUKCES!\n");
+            }
+            connectionValidated = true;
         }
-
     }
+
 
     //TODO: POŁĄCZ SIE Z DANĄ SESJA
     std::map<int, std::vector<std::string>> playerSessions;
@@ -195,7 +195,7 @@ int main(int argc, char* argv[]){
         readData(clientFd, sessionResponse , sizeof(sessionResponse)); //tylko jedne dane dostan id nowej sesji;
     } else {
         char buffer [128]; //za duży buffor
-        int ret = snprintf(buffer, sizeof(buffer), "%n", sessionID);
+        int ret = snprintf(buffer, sizeof(buffer), "%d", sessionID);
         sessionResponse = buffer; //String terminator is added by snprintf
         writeData(clientFd, sessionResponse, sizeof(sessionResponse));
     }

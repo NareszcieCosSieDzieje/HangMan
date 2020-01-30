@@ -173,9 +173,7 @@ void listenLoop(void){
     while(true){
         sockaddr_in clientAddr{};
         socklen_t cliLen = sizeof(clientAddr);
-        printf("przed\n");
         int newClient = accept(serverFd, (struct sockaddr *)&clientAddr, &cliLen); //Nawiąż nowe połączenie z klientem.
-        printf("po\n");
         if (newClient < 0) {
             perror("ERROR on accept.\n");
             exit(SOCKET_ACCEPT);
@@ -196,12 +194,13 @@ void clientValidation(int newClientFd){
     const unsigned int signin = 1;
     const unsigned int signup = 2;
 
-    char conType[1];
+    char conType[10];
     auto xRead = readData(newClientFd, conType, sizeof(conType));
-    if(xRead != 1){
+    if(xRead != 10){
         perror("User data sending error 1.\n");
     }
-    int cT = (int) conType[0];
+    std::cout << "con type: " << conType << std::endl; ;
+    int cT = (int) strtol(conType, nullptr, 10);
     char msg[100];
     xRead = readData(newClientFd, msg, sizeof(msg) );
     if(xRead != 100){
@@ -211,12 +210,12 @@ void clientValidation(int newClientFd){
     pch = strtok(msg, "-");
     char* login;
     char* pass;
-    if(pch != NULL ){
+    if(pch != nullptr ){
         login = pch;
         printf("%s\n", login);
-        pch = strtok(NULL, "-");
+        pch = strtok(nullptr, "-");
     }
-    if(pch != NULL ){
+    if(pch != nullptr ){
         pass = pch;
         printf("%s\n", pass);
     }
@@ -225,11 +224,16 @@ void clientValidation(int newClientFd){
     std::string passwordS(pass);
 
     if(cT == signup){
-        // TODO: dodaj funckje w user_loader.hpp addUser(std::string user) !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-        userExists = true;
+        if (!searchForUserData(loginS, passwordS)) {
+            addUser(loginS, passwordS);
+            //writeData(newClientFd, "AUTH-OK", sizeof("AUTH-OK"));
+            userExists = true;
+        } else {
+            //writeData(newClientFd, "AUTH-FAIL", sizeof("AUTH-FAIL"));
+            // TODO: WHAT TO DO THEN cant log error send
+        }
     } else if (cT == signin){
         userExists = searchForUserData(loginS, passwordS); //WYWOŁANIE FUNKCJI CZYTAJĄCEJ Z PLIKU
-        std::cout<<userExists<<std::endl;
     }
     if (userExists) {
         Player newPlayer(login, pass);
