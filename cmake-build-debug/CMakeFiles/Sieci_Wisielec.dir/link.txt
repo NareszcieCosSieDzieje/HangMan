@@ -1,0 +1,1 @@
+/usr/bin/c++  -g   CMakeFiles/Sieci_Wisielec.dir/main.cpp.o CMakeFiles/Sieci_Wisielec.dir/client.cpp.o CMakeFiles/Sieci_Wisielec.dir/server.cpp.o CMakeFiles/Sieci_Wisielec.dir/player.cpp.o CMakeFiles/Sieci_Wisielec.dir/session.cpp.o  -o Sieci_Wisielec 
