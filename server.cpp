@@ -219,7 +219,7 @@ void clientValidation(int newClientFd){
     bool userExists = false;
     std::string loginS(login);
     std::string passwordS(pass);
-    userExists = searchForUserData(loginS, passwordS);
+    userExists = searchForUserData(loginS, passwordS); //WYWOŁANIE FUNKCJI CZYTAJĄCEJ Z PLIKU
     std::cout<<userExists<<std::endl;
 
     /* bool userExists = false;
@@ -229,8 +229,8 @@ void clientValidation(int newClientFd){
         userExists = true;
     }
     */
+
     if (userExists) {
-        //TODO: odhacz zużyte haslo login? z jakiejs maoy hasel loginow na starcie wcztytanej
         Player newPlayer(login, pass);
         //Dodaj do mapy klientow -graczy
         clientMapMutex.lock();
@@ -240,21 +240,36 @@ void clientValidation(int newClientFd){
         writeData(newClientFd, "AUTH-OK", sizeof("AUTH-OK"));
         //TODO: OBSŁUŻ GO TERAZ?
         bool joinedSession = false;
+        int sessionMode = -1;
         while(!joinedSession){
             sendSessionData(newClientFd);
-            //get chosen session
-
-            //sleep?
+            std::this_thread::sleep_for(std::chrono::seconds(1));
+            char* sessionId;
+            int read = recv(newClientFd, sessionId, sizeof(sessionId), MSG_DONTWAIT); //response non block get chosen session
+            if (read != 0){
+                sessionMode = (int) strtol(sessionId, NULL, 10);
+                joinedSession = true;
+            }
         }
+        if(sessionMode < 0){
+            //error
+        }
+        else if (sessionMode == 0){
+            //newSession
+        } else {
+            //joinSession
+        }
+
     } else {
         writeData(newClientFd, "AUTH-FAIL", sizeof("AUTH-FAIL"));
-        //sleep(0.2)
+        sleep(0.5);
         stopConnection(newClientFd);
     }
 
 }
 
-//MUTEX?
+
+//TODO: JAKI BUFOR TUTUAJ JEST                TUTAJ daj JAKIES MUTEXY DO OCZYTU????!!
 void sendSessionData(int clientSocket){
     std::string sessionData("");
     if (playerSessions.size() > 0){
@@ -291,6 +306,15 @@ void sendSessionData(int clientSocket){
 }
 
 
+void sessionLoop() { //TODO: jak to rozwiązać
+    while(true){
+
+        //conduct session
+    }
+
+}
+
+
 //TODO: jakiś send że zrywamy połączenie?? to raczej w instacji danego problemu dac
 void stopConnection(int ClientFd){
     if (shutdown(ClientFd, SHUT_RDWR) < 0 ){
@@ -308,15 +332,6 @@ void sigHandler(int signal){
     }
     //TODO: closeServer();
 }
-
-void sessionLoop() { //TODO: jak to rozwiązać
-    while(true){
-
-        //conduct session
-    }
-
-}
-
 
 
 ssize_t readData(int fd, char * buffer, ssize_t buffsize){

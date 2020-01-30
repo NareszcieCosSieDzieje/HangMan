@@ -12,6 +12,8 @@
 #include <vector>
 #include <errno.h>
 #include <iostream>
+#include <chrono>
+#include <thread>
 
 #include "statuses.hpp"
 #include "player.hpp"
@@ -67,17 +69,33 @@ int main(int argc, char* argv[]){
 
     startClient();
 
+    //TODO: OBSLUZ BUTTONY! i reset wybierania register or login jak nie wyjdzie
+    enum conType{
+        signin = 1,
+        singup = 2//tworzenie konta
+    } typeOfConnection;
+    // TODO: GUI!!!!!!!!1
+    //  while(register or signup not clicked){
+    //      wait;
+    //  }
+    //  typeOfConnection = daj wartość
+    //TODO: ustaw login hasło, tj załaduj itp
+
+    login = "test_user"; // TO TEZ ZALADUJ
+    password = "test_pass";
+
+
     int petla = 0;
     bool connectionValidated = false;
     while(!connectionValidated) {
 
         petla++;
-        //sleep(1);
-        if (petla < 2) {
-            std::cout << "Connection no: " << petla << std::endl;
-            startConnection();
-        }
+        //if (petla < 2) {
+        //   std::cout << "Connection no: " << petla << std::endl;
+        startConnection();
+        // }
         //get nick i hasło
+
         char msg[100];
         strcpy(msg, login);
         strcat(msg, "-");
@@ -89,7 +107,7 @@ int main(int argc, char* argv[]){
         auto x = readData(clientFd, msg, sizeof(msg));
         //Jeśli nie powiodła się autoryzacja spróbuj połączyć sie od nowa.
         if (strncmp(msg, "AUTH-FAIL", 9) == 0) {
-            sleep(0.5);
+            std::this_thread::sleep_for(std::chrono::milliseconds(500));
             printf("Blad logowania sprobuj ponownie!\n");
         } else if (strncmp(msg, "AUTH-OK", 7) == 0) {
             printf("SUCCESFUL LOGIN!\n");
@@ -100,16 +118,16 @@ int main(int argc, char* argv[]){
     std::map<int, std::vector<std::string>> playerSessions;
     std::vector<std::string> players;
 
-
     bool joinedSession = false;
     while(!joinedSession){
 
 
         //TODO: w jakiej pętli ma działać poniższy kod i odczytywanie/wybór sesji
 
-        char msg[1024];
+        char msg[1024]; //TODO: WIEKSZY ROZMIAR BUFORA???
         readData(clientFd, msg, sizeof(msg));
         //sprawdz czy pusty??
+
         if(msg[0] == '\0'){
             printf("No sessions available.\n");
         }
@@ -136,18 +154,39 @@ int main(int argc, char* argv[]){
                 playerSessions.insert(std::pair<int, std::vector<std::string>>(sessionID, players));
             }
         }
+        // raczej nie potrzebne dalem w serwerze ze co 1 sekunde wysyla to ten sie poprostu zablokuje az cos przeczyta std::this_thread::sleep_for(std::chrono::seconds(1));
 
-
-        //TODO:
-        // DWIE OPCJE STWORZ I DOŁĄCZ
-        // przetwórz i wyświetl dane sesji roznych one maja ID
-        // na podstawie tego co klikniesz daj znac ktora wybierasz
-        // wyslij ID SESJI do ktorej chcesz dołączyć
-        // czekaj na odpowiedz do ktorej sesji dołaczyłes, i czy, jesli sukces to break
-        joinedSessionID = 1;
+        //TODO: STWORZYC PRZYCISK DOŁĄCZ DO SESJI; jak nie wybrano z listy to nowa, a jak wybrano to przechowaj ID i wyślij
+        // joinedSession = sessionButton.Clicked(); COS TEGO TYPU, COS CO ZMIENI TA ZMIENNA I ZAKONCZY PETLE
         joinedSession = true;
     }
 
+
+    //TODO:
+    // DWIE OPCJE STWORZ I DOŁĄCZ
+    // przetwórz i wyświetl dane sesji roznych one maja ID
+    // na podstawie tego co klikniesz daj znac ktora wybierasz
+    // wyslij ID SESJI do ktorej chcesz dołączyć
+    // czekaj na odpowiedz do ktorej sesji dołaczyłes, i czy, jesli sukces to break
+
+
+    int sessionID = 0;      //TODO: PRZEKAZ WYBRANE ID PRZEZ GUI
+    int newSession = false; // TEZ PRZEKAZ PRZEZ GUI CZY NOWA SESJA
+    char* sessionResponse;
+    if (newSession){
+        writeData(clientFd, "0", sizeof("0"));
+        // TODO: serwer tworzy sesje i zwraca id
+        readData(clientFd, sessionResponse , sizeof(sessionResponse)); //tylko jedne dane dostan id nowej sesji;
+    } else {
+        char buffer [128]; //za duży buffor
+        int ret = snprintf(buffer, sizeof(buffer), "%n", sessionID);
+        sessionResponse = buffer; //String terminator is added by snprintf
+        writeData(clientFd, sessionResponse, sizeof(sessionResponse));
+    }
+
+    joinedSessionID =  (int) strtol(sessionResponse, NULL, 10);
+
+    //TODO: SPRAWDZANIE CZY SESJA ZYJE??!!!!
     //TODO:JAK OK TO WJEDZ W PETLE GRY
 
     while(true){
@@ -179,9 +218,6 @@ void startClient(void){
         perror("Failed to bind the socket.\n");
         exit(SOCKET_BIND);
     }
-    //TODO: ustaw login hasło, tj załaduj itp
-    login = "test_user";
-    password = "test_pass";
 }
 
 void closeClient(void){
