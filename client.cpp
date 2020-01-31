@@ -91,11 +91,11 @@ int main(int argc, char* argv[]){
 
         login = "test_user";
         password = "test_pass\0";
-        connectionType = 2; //TODO: zmien to na wybor
+        connectionType = 1; //TODO: zmien to na wybor
 
         do
         {
-            std::cout << '\n' << "Press a key to continue...";
+            std::cout << '\n' << "Press a key to continue..."; //TODO: na razie zamiast gui, później usuń
         } while (std::cin.get() != '\n');
 
         startClient();
