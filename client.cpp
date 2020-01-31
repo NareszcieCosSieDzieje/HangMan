@@ -64,7 +64,7 @@ int main(int argc, char* argv[]){
 
     bindAddr.sin_addr.s_addr = htonl(INADDR_ANY);
 
-    startClient();
+    //startClient();
 
     //TODO: OBSLUZ BUTTONY! i reset wybierania register or login jak nie wyjdzie
 
@@ -93,6 +93,7 @@ int main(int argc, char* argv[]){
         password = "test_pass";
         connectionType = 2; //TODO: zmien to na wybor
 
+        startClient();
         startConnection();
 
         char buffer [10];
@@ -113,7 +114,8 @@ int main(int argc, char* argv[]){
         auto x = readData(clientFd, msg, sizeof(msg));
         //Jeśli nie powiodła się autoryzacja spróbuj połączyć sie od nowa.
         if (strncmp(msg, "AUTH-FAIL", 9) == 0) {
-            std::this_thread::sleep_for(std::chrono::milliseconds(500));
+            std::this_thread::sleep_for(std::chrono::seconds(1));
+            closeClient();
             if (connectionType == signin){
                 printf("Blad logowania sprobuj ponownie!\n");
             } else if (connectionType == signup){
@@ -230,6 +232,10 @@ void startClient(void){
         perror("Failed to create socket.\n");
         exit(SOCKET_CREATE);
     }
+    struct linger sl;
+    sl.l_onoff = 1;		/* non-zero value enables linger option in kernel */
+    sl.l_linger = 0;	/* timeout interval in seconds */
+    setsockopt(clientFd, SOL_SOCKET, SO_LINGER, &sl, sizeof(sl));  //TODO: NOWE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     if( bind(clientFd, (sockaddr*)&bindAddr, sizeof(bindAddr)) < 0 ){
         perror("Failed to bind the socket.\n");
         exit(SOCKET_BIND);

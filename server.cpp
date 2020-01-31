@@ -267,8 +267,9 @@ void clientValidation(int newClientFd){
 
     } else {
         writeData(newClientFd, "AUTH-FAIL", sizeof("AUTH-FAIL"));
-        sleep(0.5);
+        std::cout << "zamykam połączenie" << std::endl;
         stopConnection(newClientFd);
+        //std::this_thread::sleep_for(std::chrono::milliseconds(500));
     }
 
 }
@@ -322,6 +323,7 @@ void sessionLoop() { //TODO: jak to rozwiązać
 
 //TODO: jakiś send że zrywamy połączenie?? to raczej w instacji danego problemu dac
 void stopConnection(int ClientFd){
+    std::cout << "Zamykam polaczenie w stopCon" << std::endl;
     if (shutdown(ClientFd, SHUT_RDWR) < 0 ){
         perror("Failed to disconnect with the client.\n");
         //FIXME: exit?
