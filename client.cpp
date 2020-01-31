@@ -142,15 +142,13 @@ int main(int argc, char* argv[]){
     std::map<int, std::vector<std::string>> playerSessions;
     std::vector<std::string> players;
 
-    bool joinedSession = false;
-    while(!joinedSession){
-
+    bool chosenSession = false;
+    while(!chosenSession){
 
         //TODO: w jakiej pętli ma działać poniższy kod i odczytywanie/wybór sesji
 
         char msg[1024]; //TODO: WIEKSZY ROZMIAR BUFORA???
         readData(clientFd, msg, sizeof(msg));
-        //sprawdz czy pusty??
 
         if(msg[0] == '\0'){
             printf("No sessions available.\n");
@@ -181,8 +179,8 @@ int main(int argc, char* argv[]){
         // raczej nie potrzebne dalem w serwerze ze co 1 sekunde wysyla to ten sie poprostu zablokuje az cos przeczyta std::this_thread::sleep_for(std::chrono::seconds(1));
 
         //TODO: STWORZYC PRZYCISK DOŁĄCZ DO SESJI; jak nie wybrano z listy to nowa, a jak wybrano to przechowaj ID i wyślij
-        // joinedSession = sessionButton.Clicked(); COS TEGO TYPU, COS CO ZMIENI TA ZMIENNA I ZAKONCZY PETLE
-        joinedSession = true;
+        // chosenSession = sessionButton.Clicked(); COS TEGO TYPU, COS CO ZMIENI TA ZMIENNA I ZAKONCZY PETLE
+        chosenSession = true;
     }
 
 
@@ -194,19 +192,13 @@ int main(int argc, char* argv[]){
     // czekaj na odpowiedz do ktorej sesji dołaczyłes, i czy, jesli sukces to break
 
 
-    int sessionID = 0;      //TODO: PRZEKAZ WYBRANE ID PRZEZ GUI
-    int newSession = false; // TEZ PRZEKAZ PRZEZ GUI CZY NOWA SESJA
+    int sessionStatus = 1;      //TODO: PRZEKAZ WYBRANE ID PRZEZ GUI
     char* sessionResponse;
-    if (newSession){
-        writeData(clientFd, "0", sizeof("0"));
-        // TODO: serwer tworzy sesje i zwraca id
-        readData(clientFd, sessionResponse , sizeof(sessionResponse)); //tylko jedne dane dostan id nowej sesji;
-    } else {
-        char buffer [128]; //za duży buffor
-        int ret = snprintf(buffer, sizeof(buffer), "%d", sessionID);
-        sessionResponse = buffer; //String terminator is added by snprintf
-        writeData(clientFd, sessionResponse, sizeof(sessionResponse));
-    }
+    char buffer [128];
+    int ret = snprintf(buffer, sizeof(buffer), "%d", sessionStatus);
+    sessionResponse = buffer;
+    writeData(clientFd, sessionResponse, sizeof(buffer));  //WYSYŁA DANE KTÓRA SESJA WYBRANA
+    readData(clientFd, sessionResponse , sizeof(sessionResponse)); //ODCZYTAJ ID NOWEJ SESJI, LUB POTWIERDZENIE ID ISTNIEJACEJ
 
     joinedSessionID =  (int) strtol(sessionResponse, NULL, 10);
 
@@ -222,6 +214,7 @@ int main(int argc, char* argv[]){
        break;
     }
 
+    //TODO: HANDLING
     closeClient();
 
     return 0;

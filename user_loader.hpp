@@ -96,5 +96,35 @@ void addUser(std::string user, std::string password){
 }
 
 
+std::string getRandomWord(void){
+    srand (time(NULL)); //FIXME CZY SEEDOWANIE TUTAJ
+    std::string randomWord {};
+    int numberOfLines = 0;
+    std::string line {};
+    std::ifstream wordsFile;
+    wordsFile.open("words.txt", std::ifstream::in);
+    if(wordsFile.is_open()){
+        while (std::getline(wordsFile, line)){
+            ++numberOfLines;
+        }
+        if(numberOfLines > 0){
+            wordsFile.clear();
+            wordsFile.seekg(0, std::ios_base::beg);
+            int randomIndex = rand() % numberOfLines + 1;
+            for(int i = 0; i < randomIndex; i++){ //lepiejby bylo zrobij jakies seekg o te x * \n pewnie
+                std::getline(wordsFile, line);
+            }
+            line.resize(line.size()-1);
+            randomWord = line;
+        } else {
+            randomWord = "SuchEmptiness";
+        }
+    } else {
+        std::cout<<"Couldn't open the word file!" <<std::endl;
+    }
+    wordsFile.close();
+    return randomWord;
+}
+
 
 #endif //SIECI_WISIELEC_USER_LOADER_HPP

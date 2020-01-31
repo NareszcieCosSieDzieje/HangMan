@@ -257,22 +257,28 @@ void clientValidation(int newClientFd){
                 joinedSession = true;
             }
         }
+        int finalSessionId = -1;
         if(sessionMode < 0){
             //error
         }
         else if (sessionMode == 0){
+            if (playerSessions.empty()){
+                finalSessionId = 1;
+            } else {
+                finalSessionId = playerSessions.size() +1;
+            }
             //newSession
         } else {
             //joinSession
+            //finalSessionId = ;
         }
-
+        write(newClientFd, , );
     } else {
         writeData(newClientFd, "AUTH-FAIL", sizeof("AUTH-FAIL"));
         std::cout << "zamykam połączenie" << std::endl;
         stopConnection(newClientFd);
         //std::this_thread::sleep_for(std::chrono::milliseconds(500));
     }
-
 }
 
 
@@ -315,6 +321,7 @@ void sendSessionData(int clientSocket){
 
 void sessionLoop() { //TODO: jak to rozwiązać
     while(true){
+
 
         //conduct session
     }
