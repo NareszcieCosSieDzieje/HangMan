@@ -76,8 +76,8 @@ int main(int argc, char* argv[]){
 
     bindAddr.sin_addr.s_addr = htonl(INADDR_ANY); //TODO: ZMIEN NA ADRESOKRESLONY
 
-    startServer();
 
+    startServer();
     std::cout<< "MAIN PRZED LOOP" << std::endl;
     while(true){
 
@@ -206,6 +206,7 @@ void clientValidation(int newClientFd){
     if(xRead != 100){
         perror("User data sending error 2.\n");
     }
+    std::cout << msg << std::endl;
     char * pch;
     pch = strtok(msg, "-");
     char* login;

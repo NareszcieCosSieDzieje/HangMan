@@ -24,9 +24,6 @@ inline bool isDelim(char c) {
 
 bool searchForUserData(std::string login, std::string password) {
 
-// wczytaj po loginie i hasle, jesli istnieja to przechowaj w pamieci jesli znajdz to koniec
-//czy mozna dodawac nowych uzytkownikow nie [rzez serwer???
-
     std::cout << "searchForData: "<< std::endl;
     std::cout << "Login: " << login << std::endl;
     std::cout << "Haslo: " << password << std::endl;
@@ -89,7 +86,6 @@ void addUser(std::string user, std::string password){
     userFile.open("user_data.txt",  std::fstream::in | std::fstream::out | std::fstream::ate ); // append instead of overwrite
     if (userFile.is_open()){
         long pos = userFile.tellp();
-        std::cout<< ">_________________________________pos: " << pos << std::endl;
         userFile.seekp(pos-1);
         userFile << ",{" + user + ":" + password + "};";
         userFile.close();

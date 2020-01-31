@@ -90,8 +90,13 @@ int main(int argc, char* argv[]){
         // MA BYC DODANE SPRAWDZANIE ZNAKOW W LOGINIE I HASLE I ZEBY BYLY CALOSCIOWO DO 100 ZNAKOW
 
         login = "test_user";
-        password = "test_pass";
+        password = "test_pass\0";
         connectionType = 2; //TODO: zmien to na wybor
+
+        do
+        {
+            std::cout << '\n' << "Press a key to continue...";
+        } while (std::cin.get() != '\n');
 
         startClient();
         startConnection();
@@ -99,8 +104,9 @@ int main(int argc, char* argv[]){
         char buffer [10];
         int ret = snprintf(buffer, sizeof(buffer), "%d", connectionType);
         char * num_string = buffer;
-        std::cout <<"num string: "<< num_string << std::endl;
-        writeData(clientFd, num_string, sizeof(num_string)); //wysyła czy rejestracja czy co login
+        std::cout <<"num string: "<< num_string << "size:" << sizeof(num_string) << std::endl;
+
+        writeData(clientFd, num_string, sizeof(buffer)); //wysyła czy rejestracja czy co login
 
         char msg[100];
         memset(msg, 0, sizeof(msg));
