@@ -8,11 +8,6 @@
 #include <iostream>
 
 
-//TODO: zczytywanie tego zapisywanie,
-// Zapis -> przejedz az znajdziesz srednik i appenduj przed
-// max login i max password length
-
-
 const std::string delims("{,;:}\n"); //\n\t
 inline bool isDelim(char c) {
     for (int i = 0; i < delims.size(); ++i)

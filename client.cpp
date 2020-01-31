@@ -184,6 +184,8 @@ int main(int argc, char* argv[]){
     }
 
 
+    //FIXME: BRAK TWORZONEJ NAZWY SERWERA
+
     //TODO:
     // DWIE OPCJE STWORZ I DOŁĄCZ
     // przetwórz i wyświetl dane sesji roznych one maja ID
@@ -192,7 +194,7 @@ int main(int argc, char* argv[]){
     // czekaj na odpowiedz do ktorej sesji dołaczyłes, i czy, jesli sukces to break
 
 
-    int sessionStatus = 1;      //TODO: PRZEKAZ WYBRANE ID PRZEZ GUI
+    int sessionStatus = 1;      //TODO: PRZEKAZ WYBRANE ID PRZEZ GUI jak stworz to 0 jak jakas sesja to id wyciagnij jej
     char* sessionResponse;
     char buffer [128];
     int ret = snprintf(buffer, sizeof(buffer), "%d", sessionStatus);
@@ -201,6 +203,10 @@ int main(int argc, char* argv[]){
     readData(clientFd, sessionResponse , sizeof(sessionResponse)); //ODCZYTAJ ID NOWEJ SESJI, LUB POTWIERDZENIE ID ISTNIEJACEJ
 
     joinedSessionID =  (int) strtol(sessionResponse, NULL, 10);
+
+
+    // PO DOŁĄCZENIU DO SESJI JESZCZE MA WIDZIEĆ PANEL I MÓC WYBRAC ROZPOCZECIE GRY
+
 
     //TODO: SPRAWDZANIE CZY SESJA ZYJE??!!!!
     //TODO:JAK OK TO WJEDZ W PETLE GRY

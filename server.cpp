@@ -27,7 +27,7 @@ std::map<int, Player> clientMap;
 std::mutex clientMapMutex;
 
 std::map<int, std::vector<Player>> playerSessions;
-//std::mutex playerSessionsMutex;
+std::mutex playerSessionsMutex;
 
 int epollFd{};
 int serverFd{};
@@ -53,6 +53,7 @@ void sendAvailableSessions(void);
 void stopConnection(int ClientFd);
 void clientValidation(int newClientFd);
 void sendSessionData(int clientSocket);
+void sessionLoop(int sessionID);
 std::string* loadUserData(char* filePath); //TODO: zwróć array stringów
 
 
@@ -227,10 +228,8 @@ void clientValidation(int newClientFd){
     if(cT == signup){
         if (!searchForUserData(loginS, passwordS)) {
             addUser(loginS, passwordS);
-            //writeData(newClientFd, "AUTH-OK", sizeof("AUTH-OK"));
             userExists = true;
         } else {
-            //writeData(newClientFd, "AUTH-FAIL", sizeof("AUTH-FAIL"));
             // TODO: WHAT TO DO THEN cant log error send
         }
     } else if (cT == signin){
@@ -261,21 +260,52 @@ void clientValidation(int newClientFd){
         if(sessionMode < 0){
             //error
         }
-        else if (sessionMode == 0){
+        else if (sessionMode == 0){ //TODO: JAKIES ODSWEIZANIE NUMERKOW - ZA WYSOKIE WARTOSCI?
+            char buf[100];
             if (playerSessions.empty()){
                 finalSessionId = 1;
-            } else {
+                std::vector<Player> playerVector;
+                playerVector.push_back(newPlayer);
+                playerSessionsMutex.lock();
+                playerSessions.insert(std::pair<int, std::vector<Player>>(finalSessionId, playerVector));
+                playerSessionsMutex.unlock();
+                strcpy(buf, "SESSION-1\0");
+            } else if (playerSessions.size() < maxSessions )   {
                 finalSessionId = playerSessions.size() +1;
+                std::vector<Player> playerVector;
+                playerVector.push_back(newPlayer);
+                playerSessionsMutex.lock();
+                playerSessions.insert(std::pair<int, std::vector<Player>>(finalSessionId, playerVector));
+                playerSessionsMutex.unlock();
+                char num[10];
+                sprintf (num, "%d", finalSessionId);
+                strcpy(buf, "SESSION-");
+                strcat(buf, num);
+                strcat(buf, "\0"); //czy potrzebne?
+            } else {
+                //error nie mozna zrobic sesji;
+                strcpy(buf, "SESSION-MAX\0");
+                //TODO: !!!!!!!!!!!!!!!!!!_______________________________________ WYJDZ
             }
-            //newSession
+            write(newClientFd, buf, sizeof(buf));
+            sessionLoop(finalSessionId);
         } else {
-            //joinSession
             //finalSessionId = ;
+            //joinSession
+            // TODO SPRAWDZ CZY SIZE 4 jak tak to daj erro ze juz sie nie da; klient niech tez to sprawdza
+            if (playerSessions[sessionMode].size() < playersPerSession){
+                playerSessionsMutex.lock();
+                playerSessions[sessionMode].push_back(newPlayer);
+                playerSessionsMutex.lock();
+            } else {
+                //jakis error ze rip za duzo graczy
+                //write "SESSION-BUSY"
+            }
         }
-        write(newClientFd, , );
+        //TODO: write(newClientFd, , );
     } else {
         writeData(newClientFd, "AUTH-FAIL", sizeof("AUTH-FAIL"));
-        std::cout << "zamykam połączenie" << std::endl;
+        std::cout << "zamykam połączenie z klientem: " << newClientFd << std::endl;
         stopConnection(newClientFd);
         //std::this_thread::sleep_for(std::chrono::milliseconds(500));
     }
@@ -319,14 +349,33 @@ void sendSessionData(int clientSocket){
 }
 
 
-void sessionLoop() { //TODO: jak to rozwiązać
+// DOROBIC START SESJI WGL!!
+void sessionLoop(int sessionID) { //TODO: jak to rozwiązać
+    //id do rozpoznawania gracyz w sesji
     while(true){
 
 
         //conduct session
     }
 
+
 }
+
+/*
+        Po rozpoczeciu gry host traktowany jest jak zwykly gracz. Tzn: jeśli opuści sesję, a przynajmniej dwóch innych graczy gra to 		   sesja dalej trwa.
+        6. Serwer obsługuje przerwania połączeń, lub wyjście z gry. Przechowuje dane gracza na czas trwania sesji, w tym jego login. 			   Pozwalaja dołączyć do następnej rundy, w przypadku zerwania połączenia przez klienta, identyfikując go przez login.
+        7. W trakcie rundy, serwer losuje słowo i wysyła je graczom, którzy muszą w określonym czasie je odgadnąć.
+           Ten kto poprawnie odgadnie jako pierwszy wygrywa. Sesja trwa n rund. Gracze mogą zdobyć 1 punkt za zwycięstwo,
+           lub 0 punktów za przegraną.
+        8. Każdy klient osobno mierzy czas rundy i wysła go do serwera, w momencie zgadnięcia hasła, żeby rozwiązać
+           problem wyróżnienia zwycięzcy (różne szybkości połączeń). Serwer po otrzymaniu komunikatu o wygranej jednego z graczy czeka 2-3 sekundy na ewentualny komunikat o wygranej innego gracza - wtedy porównuje ich czasy i wybiera zwycięzce. W przypadku gdy jeden z dwóch użytkowników wygra jako pierwszy, ale jego komunikat o wygranej dojdzie do serwera dużo później (3 sek+) niż komunikat o wygranej drugiego gracza, to drugi gracz jest wygranym, mimo iż w rzeczywistości odgadnął jako drugi.
+        9. Podczas rundy gracz widzi punkty przeciwnika, czas do końca rundy,
+            numer rozgrywanej rundy/maksymalną liczbę rund, wskaźnik postępu przeciwnika.
+        10. W momencie osiągnięcia limitu błedów, gracz jest zawieszony do końca rundy.
+        11. Co każdą rundę ilość możliwości do popłenienia błedów resetuje się.
+        12. W przypadku remisu, dogrywka w formie kolejnej rundy.
+        13. Sesja kończy się podsumowaniem punktów graczy (scoreboard). Następnie wszyscy biorący udział w grze użytkownicy przenoszeni są do panelu wyboru/stworzenia sesji.
+*/
 
 
 //TODO: jakiś send że zrywamy połączenie?? to raczej w instacji danego problemu dac
