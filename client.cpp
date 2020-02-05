@@ -4,7 +4,6 @@
 #include <cstdio>
 #include <cstdlib>
 #include <unistd.h>
-#include <sys/epoll.h>
 #include <cstring>
 #include <csignal>
 #include <string>
@@ -148,7 +147,7 @@ int main(int argc, char* argv[]){
         //TODO: w jakiej pętli ma działać poniższy kod i odczytywanie/wybór sesji
 
         char msg[1024]; //TODO: WIEKSZY ROZMIAR BUFORA???
-        readData(clientFd, msg, sizeof(msg));
+        readData(clientFd, msg, sizeof(msg)); //FIXME: MUTTTEX MOZE BO BLOKADA PRZY WATKU
 
         if(msg[0] == '\0'){
             printf("No sessions available.\n");
@@ -230,8 +229,6 @@ int main(int argc, char* argv[]){
 //=======================================FUNC DEC=========================================\\
 
 
-
-
 void startClient(void){
     if((clientFd = socket(AF_INET, SOCK_STREAM, 0)) < 0 ){
         perror("Failed to create socket.\n");
@@ -289,6 +286,7 @@ void writeData(int fd, char * buffer, ssize_t count){
     if(ret==-1) perror("write failed on descriptor %d\n");
     if(ret!=count) perror("wrote less than requested to descriptor %d (%ld/%ld)\n");
 }
+
 
 /*
 int recv_all(int sockfd, void *buf, size_t len, int flags)
